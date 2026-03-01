@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipLab — Comprimi. Estrai. Domina.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #F4A05A;
+  --orange-dark: #C45A1A;
+  --blue: #1B2B8A;
+  --white: #FFFFFF;
+  --bg: #0D0D0D;
+  --card: rgba(244,160,90,0.05);
+  --border: rgba(244,160,90,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Syne',sans-serif;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--orange-dark);}
+
+/* BG */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(27,43,138,0.25) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(196,90,26,0.15) 0%, transparent 55%);
+}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 48px;height:64px;display:flex;align-items:center;
+  background:rgba(13,13,13,0.85);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);}
+.logo{font-size:22px;font-weight:800;letter-spacing:2px;color:var(--white);text-decoration:none;}
+.logo span{color:var(--orange);}
+.nav-links{margin-left:auto;display:flex;align-items:center;gap:32px;}
+.nav-links a{color:rgba(255,255,255,0.5);text-decoration:none;font-size:13px;font-weight:600;letter-spacing:1px;transition:color 0.2s;}
+.nav-links a:hover{color:var(--orange);}
+.nav-cta{padding:9px 22px;border-radius:8px;background:var(--orange);color:var(--bg)!important;font-weight:700;font-size:13px;letter-spacing:0.5px;transition:all 0.2s!important;}
+.nav-cta:hover{background:var(--orange-dark)!important;transform:translateY(-1px);}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;z-index:1;text-align:center;padding:100px 24px 60px;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:99px;
+  background:rgba(244,160,90,0.1);border:1px solid rgba(244,160,90,0.3);
+  font-size:12px;font-family:'DM Mono',monospace;color:var(--orange);letter-spacing:1px;
+  margin-bottom:28px;animation:fadeUp 0.7s 0.1s both;}
+.hero-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--orange);animation:blink 1.5s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.hero-title{font-size:clamp(48px,9vw,96px);font-weight:800;line-height:1;letter-spacing:-2px;
+  margin-bottom:16px;animation:fadeUp 0.7s 0.2s both;}
+.hero-title .hl{color:var(--orange);}
+.hero-title .hl2{color:#5B7BFF;}
+
+.hero-sub{font-size:16px;color:rgba(255,255,255,0.5);max-width:520px;line-height:1.7;
+  margin-bottom:44px;animation:fadeUp 0.7s 0.35s both;font-family:'DM Mono',monospace;font-size:14px;}
+
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;animation:fadeUp 0.7s 0.5s both;}
+.btn-primary{padding:15px 36px;border-radius:10px;background:var(--orange);color:var(--bg);
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;
+  cursor:pointer;transition:all 0.2s;border:none;text-decoration:none;display:inline-block;}
+.btn-primary:hover{background:var(--orange-dark);transform:translateY(-2px);box-shadow:0 12px 30px rgba(196,90,26,0.4);}
+.btn-secondary{padding:15px 36px;border-radius:10px;background:transparent;color:var(--white);
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;
+  cursor:pointer;transition:all 0.2s;border:1px solid rgba(255,255,255,0.2);text-decoration:none;display:inline-block;}
+.btn-secondary:hover{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.05);transform:translateY(-2px);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+
+/* HERO VISUAL */
+.hero-visual{margin-top:60px;animation:fadeUp 0.7s 0.65s both;position:relative;width:100%;max-width:560px;}
+.zip-card{background:rgba(244,160,90,0.06);border:1px solid var(--border);border-radius:16px;padding:24px 28px;
+  display:flex;align-items:center;gap:16px;margin-bottom:12px;transition:all 0.3s;}
+.zip-card:hover{background:rgba(244,160,90,0.1);border-color:rgba(244,160,90,0.3);}
+.zip-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.zip-icon.orange{background:rgba(244,160,90,0.15);}
+.zip-icon.blue{background:rgba(27,43,138,0.4);}
+.zip-info{flex:1;text-align:left;}
+.zip-name{font-size:14px;font-weight:600;margin-bottom:3px;}
+.zip-size{font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;}
+.zip-badge{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;}
+.zip-badge.saved{background:rgba(244,160,90,0.15);color:var(--orange);}
+.zip-badge.done{background:rgba(27,43,138,0.4);color:#8B9FFF;}
+
+/* STATS */
+.stats-bar{position:relative;z-index:1;padding:28px 48px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  display:flex;justify-content:center;gap:72px;flex-wrap:wrap;background:rgba(244,160,90,0.02);}
+.stat-item{text-align:center;}
+.stat-val{font-size:32px;font-weight:800;color:var(--orange);line-height:1;}
+.stat-label{font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;font-family:'DM Mono',monospace;letter-spacing:1px;}
+
+/* FEATURES */
+#features{padding:96px 48px;position:relative;z-index:1;}
+.section-header{text-align:center;margin-bottom:56px;}
+.section-eyebrow{font-size:11px;letter-spacing:3px;color:var(--orange);font-family:'DM Mono',monospace;margin-bottom:12px;}
+.section-title{font-size:36px;font-weight:800;letter-spacing:-1px;}
+.section-title span{color:var(--orange);}
+
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:1100px;margin:0 auto;}
+.feature-card{padding:28px;border-radius:14px;border:1px solid var(--border);background:var(--card);
+  transition:all 0.3s;position:relative;overflow:hidden;}
+.feature-card::after{content:'';position:absolute;inset:0;border-radius:14px;opacity:0;
+  background:linear-gradient(135deg,rgba(244,160,90,0.08),transparent);transition:opacity 0.3s;}
+.feature-card:hover{border-color:rgba(244,160,90,0.35);transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,0.3);}
+.feature-card:hover::after{opacity:1;}
+.feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(244,160,90,0.1);
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px;}
+.feature-title{font-size:16px;font-weight:700;margin-bottom:10px;}
+.feature-body{font-size:13px;line-height:1.7;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;}
+
+/* XP */
+#xp-section{padding:96px 48px;background:rgba(27,43,138,0.08);border-top:1px solid rgba(27,43,138,0.3);
+  border-bottom:1px solid rgba(27,43,138,0.3);position:relative;z-index:1;}
+.xp-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.xp-text h3{font-size:28px;font-weight:800;letter-spacing:-0.5px;margin-bottom:14px;}
+.xp-text h3 span{color:var(--orange);}
+.xp-text p{font-size:13px;line-height:1.8;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;}
+
+.levels-list{display:flex;flex-direction:column;gap:10px;}
+.level-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;
+  border:1px solid var(--border);background:var(--card);transition:all 0.3s;}
+.level-row:hover{border-color:rgba(244,160,90,0.3);background:rgba(244,160,90,0.06);}
+.lv-icon{font-size:22px;flex-shrink:0;}
+.lv-info{flex:1;}
+.lv-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.lv-req{font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;}
+.lv-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;}
+.badge-orange{background:rgba(244,160,90,0.15);color:var(--orange);}
+.badge-blue{background:rgba(91,123,255,0.15);color:#8B9FFF;}
+.badge-yellow{background:rgba(255,200,0,0.12);color:#FFD55A;}
+.badge-red{background:rgba(255,80,80,0.12);color:#FF8080;}
+
+/* DOWNLOAD */
+#download{padding:96px 48px;position:relative;z-index:1;}
+.download-inner{max-width:680px;margin:0 auto;text-align:center;}
+.download-box{border-radius:20px;border:1px solid rgba(244,160,90,0.25);padding:52px 44px;
+  background:linear-gradient(135deg,rgba(244,160,90,0.06),rgba(196,90,26,0.04));
+  box-shadow:0 0 80px rgba(196,90,26,0.1);margin-bottom:24px;}
+.dl-icon{font-size:72px;display:block;margin-bottom:20px;}
+.dl-title{font-size:28px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px;}
+.dl-meta{font-size:12px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;line-height:2;margin-bottom:32px;}
+.btn-download{display:inline-block;padding:16px 44px;border-radius:12px;background:var(--orange);
+  color:var(--bg);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.btn-download:hover{background:var(--orange-dark);transform:translateY(-2px);box-shadow:0 16px 40px rgba(196,90,26,0.4);}
+
+.defender-box{border-radius:14px;border:1px solid rgba(255,200,0,0.2);background:rgba(255,200,0,0.03);}
+.def-header{padding:14px 20px;border-bottom:1px solid rgba(255,200,0,0.15);
+  font-size:11px;font-family:'DM Mono',monospace;color:rgba(255,200,0,0.7);letter-spacing:1px;}
+.def-slide{display:none;padding:18px 20px;text-align:left;}
+.def-slide.active{display:block;}
+.def-slide-title{font-size:13px;font-weight:700;color:rgba(255,200,0,0.9);margin-bottom:8px;}
+.def-slide-body{font-size:12px;line-height:1.8;color:rgba(255,200,0,0.6);font-family:'DM Mono',monospace;}
+.def-nav{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;
+  border-top:1px solid rgba(255,200,0,0.1);}
+.def-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,200,0,0.3);display:inline-block;margin:0 3px;cursor:pointer;transition:background 0.2s;}
+.def-dot.active{background:rgba(255,200,0,0.8);}
+.def-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,200,0,0.3);
+  background:transparent;color:rgba(255,200,0,0.7);cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;}
+.def-btn:hover{background:rgba(255,200,0,0.08);}
+
+/* FOOTER */
+footer{padding:36px 48px;border-top:1px solid var(--border);display:flex;
+  justify-content:space-between;align-items:center;position:relative;z-index:1;flex-wrap:wrap;gap:12px;}
+.footer-logo{font-size:18px;font-weight:800;}
+.footer-logo span{color:var(--orange);}
+.footer-links{display:flex;gap:24px;}
+.footer-links a{color:rgba(255,255,255,0.35);text-decoration:none;font-size:12px;
+  font-family:'DM Mono',monospace;transition:color 0.2s;}
+.footer-links a:hover{color:var(--orange);}
+.footer-copy{font-size:11px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace;}
+
+/* TOAST */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:rgba(20,20,20,0.95);border:1px solid var(--orange);border-radius:10px;
+  padding:12px 24px;font-size:13px;color:var(--orange);transition:transform 0.3s;z-index:9999;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">ZIP<span>LAB</span></a>
+  <div class="nav-links">
+    <a href="#features">Funzionalità</a>
+    <a href="#xp-section">XP System</a>
+    <a href="#download">Download</a>
+    <a class="nav-cta" href="app.html">⚡ Comprimi Online</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-badge">● v1.0.0 — DISPONIBILE ORA</div>
+  <h1 class="hero-title">ZIP<span class="hl">LAB</span><br><span class="hl2" style="font-size:0.55em;letter-spacing:-1px">COMPRIMI. ESTRAI. DOMINA.</span></h1>
+  <p class="hero-sub">Il tuo laboratorio personale per la compressione file. Drag & drop, protezione password, sistema XP e molto altro.</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="https://www.mediafire.com/file/di25cnmjqd3jfa3/ZipLab_Setup_1.0.0.exe/file" onclick="window.open(this.href,'_blank','width=1000,height=700');return false;">⬇ Scarica per Windows</a>
+    <a class="btn-secondary" href="app.html">Prova Online →</a>
+  </div>
+  <div class="hero-visual">
+    <div class="zip-card">
+      <div class="zip-icon orange">📁</div>
+      <div class="zip-info">
+        <div class="zip-name">Progetto_2024.zip</div>
+        <div class="zip-size">247 MB → 89 MB</div>
+      </div>
+      <div class="zip-badge saved">-64%</div>
+    </div>
+    <div class="zip-card">
+      <div class="zip-icon blue">📦</div>
+      <div class="zip-info">
+        <div class="zip-name">Backup_foto.zip</div>
+        <div class="zip-size">1.2 GB → 410 MB</div>
+      </div>
+      <div class="zip-badge done">✓ FATTO</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-val">3</div><div class="stat-label">LIVELLI COMPRESSIONE</div></div>
+  <div class="stat-item"><div class="stat-val">∞</div><div class="stat-label">FILE SUPPORTATI</div></div>
+  <div class="stat-item"><div class="stat-val">4</div><div class="stat-label">LIVELLI XP</div></div>
+  <div class="stat-item"><div class="stat-val">100%</div><div class="stat-label">OFFLINE · PRIVATO</div></div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-header">
+    <div class="section-eyebrow">FUNZIONALITÀ</div>
+    <h2 class="section-title">Tutto quello che ti serve,<br><span>niente di superfluo.</span></h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🗜️</div>
+      <div class="feature-title">3 Livelli di Compressione</div>
+      <div class="feature-body">Veloce, Normale, Massimo. Scegli il bilanciamento perfetto tra velocità e dimensione finale.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">Protezione Password</div>
+      <div class="feature-body">Proteggi i tuoi archivi con password. La crittografia avviene localmente, nessun dato lascia il tuo PC.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">👁️</div>
+      <div class="feature-title">Anteprima ZIP</div>
+      <div class="feature-body">Esplora il contenuto di qualsiasi archivio ZIP prima di estrarlo. Vedi nomi, dimensioni e struttura.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <div class="feature-title">Cronologia Completa</div>
+      <div class="feature-body">Tieni traccia di tutte le operazioni. Riapri o riesporta archivi precedenti con un click.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">Drag & Drop</div>
+      <div class="feature-body">Trascina file e cartelle direttamente nell'app. Supporto per selezione multipla e cartelle intere.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏆</div>
+      <div class="feature-title">Sistema XP & Badge</div>
+      <div class="feature-body">Guadagna esperienza ogni volta che comprimi. Scala i livelli e sblocca badge esclusivi.</div>
+    </div>
+  </div>
+</section>
+
+<!-- XP -->
+<section id="xp-section">
+  <div class="xp-inner">
+    <div class="xp-text">
+      <h3>Scala i livelli.<br><span>Diventa una leggenda.</span></h3>
+      <p>Ogni MB compresso ti porta XP. Più comprimi, più sali di livello. Sblocca badge speciali per traguardi come il Primo GB compresso, Speed Demon e molto altro.</p>
+    </div>
+    <div class="levels-list">
+      <div class="level-row">
+        <div class="lv-icon">🌱</div>
+        <div class="lv-info"><div class="lv-name">PRINCIPIANTE</div><div class="lv-req">0 XP — inizia qui</div></div>
+        <div class="lv-badge badge-orange">LV 1</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-icon">📁</div>
+        <div class="lv-info"><div class="lv-name">ARCHIVISTA</div><div class="lv-req">100 XP — 100 MB</div></div>
+        <div class="lv-badge badge-blue">LV 2</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-icon">⚡</div>
+        <div class="lv-info"><div class="lv-name">MASTER ZIP</div><div class="lv-req">500 XP — 500 MB</div></div>
+        <div class="lv-badge badge-yellow">LV 3</div>
+      </div>
+      <div class="level-row">
+        <div class="lv-icon">👑</div>
+        <div class="lv-info"><div class="lv-name">LEGGENDA</div><div class="lv-req">2000 XP — 2 GB</div></div>
+        <div class="lv-badge badge-red">LV 4</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="download-inner">
+    <div class="download-box">
+      <span class="dl-icon">📦</span>
+      <div class="dl-title">ZipLab Desktop</div>
+      <div class="dl-meta">Windows 10 / 11 · Electron.js · ~80 MB<br>Offline · Privacy totale · Open Source</div>
+      <a class="btn-download" href="https://www.mediafire.com/file/di25cnmjqd3jfa3/ZipLab_Setup_1.0.0.exe/file" onclick="window.open(this.href,'_blank','width=1000,height=700');return false;">⬇ Scarica Gratis — Windows .EXE</a>
+      <div style="margin-top:16px;font-size:11px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace;">v1.0.0 · electron-builder · NSIS installer</div>
+    </div>
+    <div class="defender-box">
+      <div class="def-header">⚠ AVVISI ATTESI — COME PROCEDERE</div>
+      <div class="def-slides">
+        <div class="def-slide active" id="dl-0">
+          <div class="def-slide-title">1 · CHROME: "File Pericoloso"</div>
+          <div class="def-slide-body">Chrome può avvisare durante il download. Clicca sulla freccia ▾ accanto al file e scegli <strong>"Mantieni"</strong>. L'app è sicura: l'avviso appare perché il .exe non ha firma digitale.</div>
+        </div>
+        <div class="def-slide" id="dl-1">
+          <div class="def-slide-title">2 · WINDOWS DEFENDER: "PC Protetto"</div>
+          <div class="def-slide-body">All'avvio clicca <strong>"Ulteriori informazioni"</strong> poi <strong>"Esegui comunque"</strong>. Questo avviso appare per tutti i .exe senza firma digitale.</div>
+        </div>
+      </div>
+      <div class="def-nav">
+        <button class="def-btn" onclick="defSlide(-1)">← Prec</button>
+        <div><span class="def-dot active" id="dot-0" onclick="defTo(0)"></span><span class="def-dot" id="dot-1" onclick="defTo(1)"></span></div>
+        <button class="def-btn" onclick="defSlide(1)">Succ →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">ZIP<span>LAB</span></div>
+  <div class="footer-links">
+    <a href="app.html">App Web</a>
+    <a href="#features">Funzionalità</a>
+    <a href="#download">Download</a>
+  </div>
+  <div class="footer-copy">© 2026 ZipLab · Made with Electron + JSZip</div>
+</footer>
+
+<div id="toast"></div>
+
+<script>
+let defIdx = 0;
+function defSlide(dir){defTo(Math.max(0,Math.min(1,defIdx+dir)));}
+function defTo(i){
+  document.getElementById('dl-'+defIdx).classList.remove('active');
+  document.getElementById('dot-'+defIdx).classList.remove('active');
+  defIdx=i;
+  document.getElementById('dl-'+defIdx).classList.add('active');
+  document.getElementById('dot-'+defIdx).classList.add('active');
+}
+// Scroll reveal
+const cards=document.querySelectorAll('.feature-card,.level-row,.zip-card');
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>{e.target.style.opacity='1';e.target.style.transform='translateY(0)';},i*80);
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+cards.forEach(c=>{c.style.opacity='0';c.style.transform='translateY(20px)';c.style.transition='opacity 0.5s,transform 0.5s';observer.observe(c);});
+</script>
+</body>
+</html>

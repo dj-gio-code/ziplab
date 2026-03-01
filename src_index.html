@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZipLab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #F4A05A;
+  --orange-dark: #C45A1A;
+  --blue: #1B2B8A;
+  --blue-light: #5B7BFF;
+  --white: #FFFFFF;
+  --bg: #0F0F0F;
+  --bg2: #161616;
+  --card: rgba(244,160,90,0.04);
+  --border: rgba(244,160,90,0.12);
+  --red: #FF6060;
+  --yellow: #FFD55A;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:'Syne',sans-serif;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(244,160,90,0.2);border-radius:2px;}
+
+/* TITLEBAR */
+#titlebar{height:38px;background:rgba(0,0,0,0.5);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 14px;
+  -webkit-app-region:drag;flex-shrink:0;position:relative;z-index:100;}
+#titlebar .logo{font-size:14px;font-weight:800;letter-spacing:2px;color:var(--white);}
+#titlebar .logo span{color:var(--orange);}
+.win-controls{display:flex;gap:6px;-webkit-app-region:no-drag;}
+.win-btn{width:30px;height:22px;border:none;cursor:pointer;font-size:11px;border-radius:6px;font-family:'DM Mono',monospace;transition:all 0.2s;}
+.win-btn.min{background:rgba(244,160,90,0.12);color:var(--orange);}
+.win-btn.max{background:rgba(91,123,255,0.12);color:var(--blue-light);}
+.win-btn.cls{background:rgba(255,96,96,0.12);color:var(--red);}
+.win-btn:hover{filter:brightness(1.5);}
+
+/* LAYOUT */
+#app{display:flex;flex-direction:column;height:calc(100vh - 38px);}
+.main-grid{display:grid;grid-template-columns:1fr 300px;gap:1px;flex:1;overflow:hidden;background:var(--border);}
+.panel{background:var(--bg);overflow:hidden;display:flex;flex-direction:column;}
+.panel-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;
+  letter-spacing:1px;display:flex;align-items:center;gap:8px;flex-shrink:0;font-family:'DM Mono',monospace;
+  color:rgba(255,255,255,0.5);}
+.panel-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);}
+.panel-dot.blue{background:var(--blue-light);}
+.panel-dot.yellow{background:var(--yellow);}
+.panel-body{flex:1;overflow-y:auto;padding:14px;}
+
+/* NAV TABS */
+#nav{display:flex;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2);flex-shrink:0;}
+.nav-tab{padding:10px 18px;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  border:none;background:transparent;color:rgba(255,255,255,0.35);transition:all 0.2s;
+  border-bottom:2px solid transparent;}
+.nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);background:rgba(244,160,90,0.04);}
+.nav-tab:hover:not(.active){color:rgba(255,255,255,0.6);}
+
+/* DROP ZONE */
+#drop-zone{margin:12px;border:2px dashed rgba(244,160,90,0.2);border-radius:12px;
+  padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.3s;flex-shrink:0;}
+#drop-zone:hover,#drop-zone.drag-over{border-color:var(--orange);background:rgba(244,160,90,0.05);}
+#drop-zone .icon{font-size:36px;margin-bottom:10px;display:block;}
+#drop-zone .label{font-size:13px;font-weight:700;margin-bottom:5px;}
+#drop-zone .sublabel{font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;}
+
+/* FILE LIST */
+#file-list{flex:1;overflow-y:auto;padding:0 12px;}
+.file-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin-bottom:6px;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;transition:all 0.2s;}
+.file-item:hover{border-color:rgba(244,160,90,0.25);background:rgba(244,160,90,0.06);}
+.file-icon{font-size:18px;flex-shrink:0;}
+.file-info{flex:1;min-width:0;}
+.file-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;}
+.file-size{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;font-family:'DM Mono',monospace;}
+.file-remove{cursor:pointer;color:rgba(255,96,96,0.5);transition:color 0.2s;font-size:14px;flex-shrink:0;}
+.file-remove:hover{color:var(--red);}
+
+/* ACTION BAR */
+#action-bar{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.btn{flex:1;padding:10px 8px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;transition:all 0.2s;}
+.btn-primary{background:var(--orange);color:var(--bg);}
+.btn-primary:hover{background:var(--orange-dark);box-shadow:0 6px 20px rgba(196,90,26,0.35);}
+.btn-secondary{background:rgba(91,123,255,0.12);color:var(--blue-light);border:1px solid rgba(91,123,255,0.2);}
+.btn-secondary:hover{background:rgba(91,123,255,0.2);}
+.btn-danger{background:rgba(255,96,96,0.1);color:var(--red);border:1px solid rgba(255,96,96,0.2);}
+.btn-danger:hover{background:rgba(255,96,96,0.2);}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* SETTINGS */
+.settings-group{margin-bottom:18px;}
+.settings-label{font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:8px;font-family:'DM Mono',monospace;}
+.settings-row{display:flex;gap:6px;margin-bottom:8px;}
+.seg-btn{flex:1;padding:8px 4px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);
+  background:transparent;color:rgba(255,255,255,0.35);cursor:pointer;font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;transition:all 0.2s;}
+.seg-btn.active{background:rgba(244,160,90,0.12);color:var(--orange);border-color:rgba(244,160,90,0.35);}
+.seg-btn:hover{border-color:rgba(244,160,90,0.25);color:rgba(244,160,90,0.7);}
+.input-field{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px;color:var(--white);font-family:'DM Mono',monospace;font-size:12px;
+  padding:9px 12px;outline:none;transition:border-color 0.2s;}
+.input-field:focus{border-color:var(--orange);}
+.input-field::placeholder{color:rgba(255,255,255,0.2);}
+.checkbox-row{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.checkbox-row input{accent-color:var(--orange);width:14px;height:14px;}
+.checkbox-row label{font-size:12px;cursor:pointer;}
+
+/* PROGRESS */
+#progress-area{padding:0 12px 12px;flex-shrink:0;}
+.progress-bar-bg{background:rgba(244,160,90,0.1);border-radius:99px;height:10px;overflow:hidden;border:1px solid var(--border);}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--orange-dark),var(--orange));border-radius:99px;transition:width 0.3s;width:0%;}
+.progress-label{font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px;display:flex;justify-content:space-between;font-family:'DM Mono',monospace;}
+#savings-badge{display:none;margin:8px 12px;padding:12px;background:rgba(244,160,90,0.06);
+  border:1px solid rgba(244,160,90,0.25);border-radius:10px;text-align:center;}
+.savings-pct{color:var(--orange);font-size:22px;font-weight:800;}
+
+/* HISTORY */
+.history-item{padding:10px 12px;margin-bottom:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;cursor:pointer;transition:all 0.2s;}
+.history-item:hover{border-color:rgba(244,160,90,0.25);}
+.h-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.h-meta{font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;display:flex;gap:10px;font-family:'DM Mono',monospace;}
+.h-type{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}
+.h-type.compress{background:rgba(244,160,90,0.1);color:var(--orange);}
+.h-type.extract{background:rgba(91,123,255,0.1);color:var(--blue-light);}
+
+/* XP */
+.xp-bar-bg{background:rgba(244,160,90,0.1);border-radius:99px;height:8px;margin:6px 0;overflow:hidden;border:1px solid var(--border);}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--orange-dark),var(--orange));border-radius:99px;transition:width 0.8s cubic-bezier(0.23,1,0.32,1);}
+.level-badge{display:inline-block;padding:5px 14px;border-radius:8px;
+  background:rgba(244,160,90,0.1);border:1px solid rgba(244,160,90,0.3);
+  font-size:12px;font-weight:700;color:var(--orange);}
+.badge-item{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;margin:4px;
+  background:rgba(255,213,90,0.07);border:1px solid rgba(255,213,90,0.2);
+  border-radius:8px;font-size:11px;font-weight:600;color:var(--yellow);}
+.badge-item.locked{opacity:0.25;filter:grayscale(1);}
+
+/* PREVIEW */
+.preview-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:11px;font-family:'DM Mono',monospace;}
+.pi-icon{font-size:14px;flex-shrink:0;}
+.pi-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pi-size{color:rgba(255,255,255,0.35);font-size:10px;flex-shrink:0;}
+
+/* EXTRACT ZONE */
+#extract-zone{margin:12px;border:2px dashed rgba(91,123,255,0.2);border-radius:12px;
+  padding:28px;text-align:center;cursor:pointer;transition:all 0.3s;}
+#extract-zone:hover,#extract-zone.drag-over{border-color:var(--blue-light);background:rgba(91,123,255,0.05);}
+#selected-zip{margin:0 12px 12px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;display:none;}
+#selected-zip .zip-name{font-size:13px;font-weight:600;}
+#selected-zip .zip-size{font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;font-family:'DM Mono',monospace;}
+
+/* MODAL */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;
+  align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+#modal-overlay.visible{display:flex;}
+#modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:26px;min-width:360px;max-width:480px;box-shadow:0 0 60px rgba(0,0,0,0.5);}
+#modal-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+#modal-body{margin-bottom:20px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+#modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-btn{padding:9px 22px;border-radius:8px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;transition:all 0.2s;}
+.modal-btn-ok{background:var(--orange);color:var(--bg);}
+.modal-btn-ok:hover{background:var(--orange-dark);}
+.modal-btn-cancel{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);}
+.modal-btn-cancel:hover{background:rgba(255,255,255,0.12);}
+
+/* STATUS BAR */
+#statusbar{height:26px;background:rgba(0,0,0,0.4);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 14px;gap:20px;
+  font-size:10px;color:rgba(255,255,255,0.35);flex-shrink:0;font-family:'DM Mono',monospace;}
+.status-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);display:inline-block;margin-right:5px;}
+
+/* TOAST */
+#toast{position:fixed;bottom:32px;right:20px;padding:11px 18px;z-index:2000;
+  background:rgba(15,15,15,0.95);border:1px solid var(--orange);border-radius:10px;
+  font-size:12px;transform:translateY(60px);opacity:0;transition:all 0.3s;max-width:300px;}
+#toast.show{transform:translateY(0);opacity:1;}
+#toast.error{border-color:var(--red);color:var(--red);}
+</style>
+</head>
+<body>
+<!-- TITLEBAR -->
+<div id="titlebar">
+  <span class="logo">ZIP<span>LAB</span> <span style="font-size:9px;opacity:0.4;font-weight:400;letter-spacing:1px">v1.0.0</span></span>
+  <div class="win-controls">
+    <button class="win-btn min" onclick="ziplab.minimize()">─</button>
+    <button class="win-btn max" onclick="ziplab.maximize()">□</button>
+    <button class="win-btn cls" onclick="ziplab.close()">✕</button>
+  </div>
+</div>
+
+<div id="app">
+  <div id="nav">
+    <button class="nav-tab active" data-tab="compress">⚡ Comprimi</button>
+    <button class="nav-tab" data-tab="extract">📂 Estrai</button>
+    <button class="nav-tab" data-tab="history">🕐 Cronologia</button>
+    <button class="nav-tab" data-tab="xp">🏆 XP & Badge</button>
+    <div style="flex:1"></div>
+    <button class="nav-tab" onclick="showUninstallModal()" style="color:rgba(255,96,96,0.4)">⚠ Disinstalla</button>
+  </div>
+
+  <!-- COMPRESS -->
+  <div class="main-grid" id="tab-compress" style="display:grid">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-dot"></div>FILE DA COMPRIMERE</div>
+      <div id="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="browseFiles()">
+        <span class="icon">📦</span>
+        <div class="label">Trascina file o cartelle</div>
+        <div class="sublabel">oppure clicca per selezionare</div>
+      </div>
+      <div id="file-list"></div>
+      <div id="progress-area" style="display:none">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+        <div class="progress-label"><span id="progress-text">Elaborazione...</span><span id="progress-pct">0%</span></div>
+      </div>
+      <div id="savings-badge">
+        <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;margin-bottom:4px">SPAZIO RISPARMIATO</div>
+        <div class="savings-pct" id="savings-pct">0%</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;margin-top:4px" id="savings-detail"></div>
+      </div>
+      <div id="action-bar">
+        <button class="btn btn-primary" onclick="startCompress()" id="btn-compress">⚡ Comprimi</button>
+        <button class="btn btn-secondary" onclick="clearFiles()">✕ Svuota</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-dot blue"></div>IMPOSTAZIONI</div>
+      <div class="panel-body">
+        <div class="settings-group">
+          <div class="settings-label">NOME ARCHIVIO</div>
+          <input class="input-field" id="archive-name" type="text" placeholder="archivio.zip" value="archivio.zip">
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">LIVELLO COMPRESSIONE</div>
+          <div class="settings-row">
+            <button class="seg-btn" data-level="fast" onclick="setLevel('fast')">⚡ Veloce</button>
+            <button class="seg-btn active" data-level="normal" onclick="setLevel('normal')">⚖ Normale</button>
+            <button class="seg-btn" data-level="max" onclick="setLevel('max')">🔬 Massimo</button>
+          </div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace" id="level-desc">Bilanciamento ottimale tra velocità e compressione.</div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">CARTELLA OUTPUT</div>
+          <div style="display:flex;gap:6px">
+            <input class="input-field" id="output-dir" type="text" placeholder="Desktop" style="flex:1">
+            <button class="btn btn-secondary" style="flex:none;width:40px;padding:8px;border-radius:8px" onclick="chooseOutputDir()">📁</button>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">PROTEZIONE PASSWORD</div>
+          <label class="checkbox-row" style="margin-bottom:8px">
+            <input type="checkbox" id="use-password" onchange="togglePassword()">
+            <label for="use-password">Proteggi con password</label>
+          </label>
+          <input class="input-field" id="zip-password" type="password" placeholder="Password archivio..." style="display:none">
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">INFO SELEZIONE</div>
+          <div style="font-size:12px;line-height:1.8;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">
+            File: <span id="info-count" style="color:var(--orange)">0</span><br>
+            Dim totale: <span id="info-size" style="color:var(--orange)">0 B</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXTRACT -->
+  <div class="main-grid" id="tab-extract" style="display:none">
+    <div class="panel">
+      <div class="panel-header"><div class="panel-dot blue"></div>ARCHIVIO DA ESTRARRE</div>
+      <div id="extract-zone" ondragover="handleExtractDragOver(event)" ondragleave="handleExtractDragLeave(event)" ondrop="handleExtractDrop(event)" onclick="browseZip()">
+        <div style="font-size:32px;margin-bottom:10px">📂</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px">Trascina un archivio .ZIP</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.3);font-family:'DM Mono',monospace">oppure clicca per selezionare</div>
+      </div>
+      <div id="selected-zip">
+        <div class="zip-name" id="sel-zip-name">—</div>
+        <div class="zip-size" id="sel-zip-size">—</div>
+      </div>
+      <div id="preview-area" style="flex:1;overflow-y:auto;padding:0 12px">
+        <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.3);margin-bottom:8px;font-family:'DM Mono',monospace">CONTENUTO ARCHIVIO</div>
+        <div id="preview-list"></div>
+      </div>
+      <div id="extract-progress-area" style="padding:0 12px 8px;display:none">
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="extract-progress-fill"></div></div>
+        <div class="progress-label"><span>Estrazione...</span><span id="extract-pct">0%</span></div>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+        <button class="btn btn-secondary" onclick="startExtract()" id="btn-extract">📂 Estrai</button>
+        <button class="btn btn-primary" onclick="previewZip()">👁 Anteprima</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-dot blue"></div>OPZIONI ESTRAZIONE</div>
+      <div class="panel-body">
+        <div class="settings-group">
+          <div class="settings-label">CARTELLA DESTINAZIONE</div>
+          <div style="display:flex;gap:6px">
+            <input class="input-field" id="extract-dir" type="text" placeholder="Seleziona cartella...">
+            <button class="btn btn-secondary" style="flex:none;width:40px;padding:8px;border-radius:8px" onclick="chooseExtractDir()">📁</button>
+          </div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">PASSWORD (se protetto)</div>
+          <input class="input-field" id="extract-password" type="password" placeholder="Password archivio...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="main-grid" id="tab-history" style="display:none">
+    <div class="panel" style="grid-column:1/3">
+      <div class="panel-header">
+        <div class="panel-dot"></div>CRONOLOGIA OPERAZIONI
+        <div style="margin-left:auto">
+          <button class="btn btn-danger" onclick="clearHistory()" style="flex:none;padding:5px 14px;font-size:11px;border-radius:7px">✕ Cancella</button>
+        </div>
+      </div>
+      <div class="panel-body" id="history-list">
+        <div style="text-align:center;color:rgba(255,255,255,0.2);padding:48px;font-size:13px">Nessuna operazione ancora.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- XP -->
+  <div class="main-grid" id="tab-xp" style="display:none">
+    <div class="panel" style="grid-column:1/3">
+      <div class="panel-header"><div class="panel-dot yellow"></div>PROGRESSI & BADGE</div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+          <div>
+            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:12px;font-family:'DM Mono',monospace">LIVELLO ATTUALE</div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+              <div style="font-size:48px" id="level-icon">🌱</div>
+              <div>
+                <div class="level-badge" id="level-name">PRINCIPIANTE</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:6px;font-family:'DM Mono',monospace"><span id="xp-current">0</span> / <span id="xp-next">100</span> XP</div>
+              </div>
+            </div>
+            <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px;font-family:'DM Mono',monospace">+1 XP per ogni MB compresso</div>
+            <div style="margin-top:18px">
+              <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:8px;font-family:'DM Mono',monospace">STATISTICHE</div>
+              <div style="font-size:12px;line-height:2;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace">
+                MB compressi: <span id="stat-mb" style="color:var(--orange)">0</span><br>
+                Archivi creati: <span id="stat-archives" style="color:var(--orange)">0</span><br>
+                File estratti: <span id="stat-extracts" style="color:var(--orange)">0</span><br>
+                Spazio risparmiato: <span id="stat-saved" style="color:var(--orange)">0 MB</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;letter-spacing:1px;color:rgba(255,255,255,0.35);margin-bottom:12px;font-family:'DM Mono',monospace">BADGE</div>
+            <div id="badges-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <span><span class="status-dot"></span><span id="status-msg">Pronto</span></span>
+    <span style="margin-left:auto" id="status-files">0 file</span>
+    <span id="status-xp">XP: 0</span>
+    <span id="status-level">LV: Principiante</span>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div id="modal-title">Conferma</div>
+    <div id="modal-body"></div>
+    <div id="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Annulla</button>
+      <button class="modal-btn modal-btn-ok" id="modal-ok">Conferma</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let selectedFiles=[];
+let selectedZipPath=null;
+let compressionLevel='normal';
+let outputDir='';
+let extractDir='';
+let xpData=JSON.parse(localStorage.getItem('ziplab_xp')||'{"xp":0,"mb":0,"archives":0,"extracts":0,"savedMb":0}');
+let history=JSON.parse(localStorage.getItem('ziplab_history')||'[]');
+let settings=JSON.parse(localStorage.getItem('ziplab_settings')||'{"level":"normal"}');
+
+compressionLevel=settings.level||'normal';
+document.querySelector(`[data-level="${compressionLevel}"]`)?.classList.add('active');
+
+const LEVELS=[
+  {name:'PRINCIPIANTE',icon:'🌱',minXp:0,maxXp:100},
+  {name:'ARCHIVISTA',icon:'📁',minXp:100,maxXp:500},
+  {name:'MASTER ZIP',icon:'⚡',minXp:500,maxXp:2000},
+  {name:'LEGGENDA',icon:'👑',minXp:2000,maxXp:Infinity},
+];
+
+const BADGES=[
+  {id:'first_zip',icon:'📦',name:'Primo Archivio',desc:'Crea il primo .zip',check:d=>d.archives>=1},
+  {id:'first_gb',icon:'💾',name:'Primo GB',desc:'Comprimi 1024 MB',check:d=>d.mb>=1024},
+  {id:'speed_demon',icon:'⚡',name:'Speed Demon',desc:'10 archivi creati',check:d=>d.archives>=10},
+  {id:'extractor',icon:'🔓',name:'Estrattore',desc:'5 archivi estratti',check:d=>d.extracts>=5},
+  {id:'saver',icon:'💚',name:'Space Saver',desc:'Risparmia 100 MB',check:d=>d.savedMb>=100},
+  {id:'legend',icon:'👑',name:'Leggenda',desc:'Raggiungi 2000 XP',check:d=>d.xp>=2000},
+];
+
+document.querySelectorAll('.nav-tab[data-tab]').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const tab=t.dataset.tab;
+    document.getElementById('tab-compress').style.display=tab==='compress'?'grid':'none';
+    document.getElementById('tab-extract').style.display=tab==='extract'?'grid':'none';
+    document.getElementById('tab-history').style.display=tab==='history'?'grid':'none';
+    document.getElementById('tab-xp').style.display=tab==='xp'?'grid':'none';
+    if(tab==='history')renderHistory();
+    if(tab==='xp')renderXP();
+  });
+});
+
+function handleDragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag-over');}
+function handleDragLeave(e){document.getElementById('drop-zone').classList.remove('drag-over');}
+function handleDrop(e){e.preventDefault();document.getElementById('drop-zone').classList.remove('drag-over');[...e.dataTransfer.files].forEach(f=>addFile(f.path));}
+
+function browseFiles(){const input=document.createElement('input');input.type='file';input.multiple=true;input.onchange=()=>[...input.files].forEach(f=>addFile(f.path));input.click();}
+
+async function addFile(filePath){
+  if(!filePath)return;
+  if(selectedFiles.includes(filePath))return;
+  const stats=await ziplab.getFileStats(filePath);
+  if(!stats.success)return;
+  selectedFiles.push(filePath);renderFiles();
+}
+
+function renderFiles(){
+  const list=document.getElementById('file-list');
+  list.innerHTML=selectedFiles.map((f,i)=>{
+    const name=f.split(/[/\\]/).pop();
+    const ext=name.split('.').pop().toLowerCase();
+    return`<div class="file-item"><span class="file-icon">${getFileIcon(ext)}</span><div class="file-info"><div class="file-name" title="${f}">${name}</div><div class="file-size">${f}</div></div><span class="file-remove" onclick="removeFile(${i})">✕</span></div>`;
+  }).join('');
+  updateSelectionInfo();
+  setStatus(`${selectedFiles.length} file selezionati`);
+}
+
+function getFileIcon(ext){
+  if(['jpg','jpeg','png','gif','bmp','webp','svg'].includes(ext))return'🖼';
+  if(['mp3','wav','flac','ogg','aac'].includes(ext))return'🎵';
+  if(['mp4','avi','mkv','mov','wmv'].includes(ext))return'🎬';
+  if(['pdf'].includes(ext))return'📄';
+  if(['zip','rar','7z','tar','gz'].includes(ext))return'📦';
+  if(['js','ts','py','cpp','c','java','html','css','json'].includes(ext))return'💻';
+  if(['doc','docx'].includes(ext))return'📝';
+  if(['xls','xlsx'].includes(ext))return'📊';
+  return'📎';
+}
+
+function removeFile(i){selectedFiles.splice(i,1);renderFiles();}
+function clearFiles(){selectedFiles=[];renderFiles();document.getElementById('savings-badge').style.display='none';}
+
+async function updateSelectionInfo(){
+  let total=0;
+  for(const f of selectedFiles){const s=await ziplab.getFileStats(f);if(s.success)total+=s.size;}
+  document.getElementById('info-count').textContent=selectedFiles.length;
+  document.getElementById('info-size').textContent=formatSize(total);
+  document.getElementById('status-files').textContent=`${selectedFiles.length} file`;
+}
+
+function setLevel(l){
+  compressionLevel=l;
+  document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.level===l));
+  const descs={fast:'Veloce ma meno compresso. Ideale per file già compressi.',normal:'Bilanciamento ottimale tra velocità e compressione.',max:'Massima compressione. Può richiedere più tempo.'};
+  document.getElementById('level-desc').textContent=descs[l];
+  settings.level=l;localStorage.setItem('ziplab_settings',JSON.stringify(settings));
+}
+
+function togglePassword(){const show=document.getElementById('use-password').checked;document.getElementById('zip-password').style.display=show?'block':'none';}
+
+async function chooseOutputDir(){const dir=await ziplab.chooseDirectory();if(dir){outputDir=dir;document.getElementById('output-dir').value=dir;}}
+async function chooseExtractDir(){const dir=await ziplab.chooseDirectory();if(dir){extractDir=dir;document.getElementById('extract-dir').value=dir;}}
+
+async function startCompress(){
+  if(selectedFiles.length===0){showToast('Nessun file selezionato!',true);return;}
+  const outDir=outputDir||document.getElementById('output-dir').value;
+  if(!outDir){showToast('Seleziona la cartella di output!',true);return;}
+  const archiveName=document.getElementById('archive-name').value||'archivio.zip';
+  document.getElementById('progress-area').style.display='block';
+  document.getElementById('savings-badge').style.display='none';
+  document.getElementById('btn-compress').disabled=true;
+  setStatus('Compressione in corso...');
+  ziplab.removeAllListeners('compress-progress');
+  ziplab.onCompressProgress(pct=>{document.getElementById('progress-fill').style.width=pct+'%';document.getElementById('progress-pct').textContent=pct+'%';});
+  const result=await ziplab.compressFiles({files:selectedFiles,outputPath:outDir,level:compressionLevel,archiveName});
+  document.getElementById('btn-compress').disabled=false;
+  if(result.success){
+    document.getElementById('progress-fill').style.width='100%';
+    document.getElementById('savings-badge').style.display='block';
+    document.getElementById('savings-pct').textContent=result.saved+'%';
+    document.getElementById('savings-detail').textContent=`${formatSize(result.originalSize)} → ${formatSize(result.compressedSize)}`;
+    showToast(`✅ Archivio creato: ${archiveName}`);setStatus('Compressione completata');
+    const mbCompressed=result.originalSize/(1024*1024);const savedMb=(result.originalSize-result.compressedSize)/(1024*1024);
+    addXP(Math.round(mbCompressed),mbCompressed,savedMb,true);
+    addHistory({type:'compress',name:archiveName,path:result.outputPath,originalSize:result.originalSize,compressedSize:result.compressedSize,saved:result.saved,date:Date.now()});
+  }else{showToast('Errore: '+result.error,true);setStatus('Errore durante compressione');}
+}
+
+function handleExtractDragOver(e){e.preventDefault();document.getElementById('extract-zone').classList.add('drag-over');}
+function handleExtractDragLeave(e){document.getElementById('extract-zone').classList.remove('drag-over');}
+function handleExtractDrop(e){e.preventDefault();document.getElementById('extract-zone').classList.remove('drag-over');const files=[...e.dataTransfer.files];if(files.length>0&&files[0].path.endsWith('.zip'))setSelectedZip(files[0].path);}
+async function browseZip(){const p=await ziplab.chooseZipFile();if(p)setSelectedZip(p);}
+async function setSelectedZip(p){selectedZipPath=p;const name=p.split(/[/\\]/).pop();document.getElementById('sel-zip-name').textContent=name;const stats=await ziplab.getFileStats(p);document.getElementById('sel-zip-size').textContent=stats.success?formatSize(stats.size):'?';document.getElementById('selected-zip').style.display='block';setStatus(`Archivio: ${name}`);previewZip();}
+
+async function previewZip(){
+  if(!selectedZipPath)return;
+  const res=await ziplab.previewZip(selectedZipPath);
+  const list=document.getElementById('preview-list');
+  if(!res.success){list.innerHTML=`<div style="color:var(--red);font-size:11px">${res.error}</div>`;return;}
+  list.innerHTML=res.entries.slice(0,100).map(e=>{const icon=e.isDirectory?'📁':getFileIcon(e.name.split('.').pop());return`<div class="preview-item"><span class="pi-icon">${icon}</span><span class="pi-name" title="${e.name}">${e.name}</span><span class="pi-size">${e.isDirectory?'':formatSize(e.size)}</span></div>`;}).join('')+(res.entries.length>100?`<div style="font-size:10px;color:rgba(255,255,255,0.3);padding:6px;font-family:'DM Mono',monospace">...e altri ${res.entries.length-100} elementi</div>`:'');
+}
+
+async function startExtract(){
+  if(!selectedZipPath){showToast('Nessun archivio selezionato!',true);return;}
+  const dir=extractDir||document.getElementById('extract-dir').value;
+  if(!dir){showToast('Seleziona la cartella di destinazione!',true);return;}
+  document.getElementById('extract-progress-area').style.display='block';
+  document.getElementById('btn-extract').disabled=true;setStatus('Estrazione in corso...');
+  ziplab.removeAllListeners('extract-progress');
+  ziplab.onExtractProgress(pct=>{document.getElementById('extract-progress-fill').style.width=pct+'%';document.getElementById('extract-pct').textContent=pct+'%';});
+  const result=await ziplab.extractZip({zipPath:selectedZipPath,outputDir:dir});
+  document.getElementById('btn-extract').disabled=false;
+  if(result.success){showToast('✅ Estrazione completata!');setStatus('Estrazione completata');addXP(5,0,0,false);addHistory({type:'extract',name:selectedZipPath.split(/[/\\]/).pop(),path:result.outputDir,date:Date.now()});xpData.extracts++;saveXP();}
+  else{showToast('Errore: '+result.error,true);setStatus('Errore estrazione');}
+}
+
+function addHistory(item){history.unshift(item);if(history.length>50)history.pop();localStorage.setItem('ziplab_history',JSON.stringify(history));}
+
+function renderHistory(){
+  const c=document.getElementById('history-list');
+  if(history.length===0){c.innerHTML='<div style="text-align:center;color:rgba(255,255,255,0.2);padding:48px;font-size:13px">Nessuna operazione ancora.</div>';return;}
+  c.innerHTML=history.map(h=>{const date=new Date(h.date).toLocaleString('it-IT');const extra=h.type==='compress'?`Risparmio: ${h.saved}% · ${formatSize(h.originalSize)} → ${formatSize(h.compressedSize)}`:`Estratto in: ${h.path}`;return`<div class="history-item" onclick="ziplab.openInExplorer('${h.path.replace(/\\/g,'\\\\')}')""><div style="display:flex;align-items:center;gap:8px"><span class="h-type ${h.type}">${h.type==='compress'?'⚡ Comprimi':'📂 Estrai'}</span><span class="h-name">${h.name}</span></div><div class="h-meta"><span>${date}</span><span>${extra}</span></div></div>`;}).join('');
+}
+
+function clearHistory(){history=[];localStorage.setItem('ziplab_history',JSON.stringify(history));renderHistory();}
+
+function addXP(amount,mb,savedMb,isCompress){xpData.xp+=amount;xpData.mb+=mb;xpData.savedMb+=savedMb;if(isCompress)xpData.archives++;saveXP();document.getElementById('status-xp').textContent=`XP: ${Math.round(xpData.xp)}`;const lv=getLevel();document.getElementById('status-level').textContent=`LV: ${lv.name}`;}
+function saveXP(){localStorage.setItem('ziplab_xp',JSON.stringify(xpData));}
+function getLevel(){for(let i=LEVELS.length-1;i>=0;i--){if(xpData.xp>=LEVELS[i].minXp)return LEVELS[i];}return LEVELS[0];}
+
+function renderXP(){
+  const lv=getLevel();const nextLv=LEVELS[LEVELS.indexOf(lv)+1];
+  document.getElementById('level-icon').textContent=lv.icon;
+  document.getElementById('level-name').textContent=lv.name;
+  document.getElementById('xp-current').textContent=Math.round(xpData.xp);
+  document.getElementById('xp-next').textContent=nextLv?nextLv.minXp:'∞';
+  const pct=nextLv?Math.min(100,((xpData.xp-lv.minXp)/(nextLv.minXp-lv.minXp))*100):100;
+  document.getElementById('xp-bar').style.width=pct+'%';
+  document.getElementById('stat-mb').textContent=Math.round(xpData.mb);
+  document.getElementById('stat-archives').textContent=xpData.archives;
+  document.getElementById('stat-extracts').textContent=xpData.extracts;
+  document.getElementById('stat-saved').textContent=Math.round(xpData.savedMb)+' MB';
+  document.getElementById('badges-container').innerHTML=BADGES.map(b=>{const unlocked=b.check(xpData);return`<div class="badge-item ${unlocked?'':'locked'}" title="${b.desc}"><span>${b.icon}</span><span>${b.name}</span></div>`;}).join('');
+}
+
+function showModal(title,body,onOk){document.getElementById('modal-title').textContent=title;document.getElementById('modal-body').innerHTML=body;document.getElementById('modal-ok').onclick=()=>{closeModal();onOk();};document.getElementById('modal-overlay').classList.add('visible');}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('visible');}
+function showUninstallModal(){showModal('⚠ Disinstalla ZipLab','<p>Sei sicuro di voler disinstallare ZipLab?<br>Tutti i dati e le preferenze verranno eliminati.</p>',()=>ziplab.uninstall());}
+
+function showToast(msg,isError=false){const t=document.getElementById('toast');t.textContent=msg;t.className=isError?'error show':'show';setTimeout(()=>t.className='',3000);}
+function setStatus(msg){document.getElementById('status-msg').textContent=msg;}
+function formatSize(bytes){if(bytes<1024)return bytes+' B';if(bytes<1024*1024)return(bytes/1024).toFixed(1)+' KB';if(bytes<1024*1024*1024)return(bytes/1024/1024).toFixed(1)+' MB';return(bytes/1024/1024/1024).toFixed(2)+' GB';}
+
+document.getElementById('status-xp').textContent=`XP: ${Math.round(xpData.xp)}`;
+const initLv=getLevel();
+document.getElementById('status-level').textContent=`LV: ${initLv.name}`;
+document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));
+document.querySelector(`[data-level="${compressionLevel}"]`)?.classList.add('active');
+</script>
+</body>
+</html>
